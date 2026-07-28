@@ -1,0 +1,14 @@
+services:
+  site:
+    image: nginx:1.27-alpine
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+      - ./nginx.alloy.conf:/etc/nginx/nginx.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3000/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 3s
