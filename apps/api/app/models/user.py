@@ -1,7 +1,7 @@
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base_class import BaseModel
 
@@ -17,3 +17,5 @@ class User(BaseModel):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    user_roles: Mapped[list["UserRole"]] = relationship("UserRole", back_populates="user")
+    roles: Mapped[list["Role"]] = relationship("Role", secondary="user_roles", back_populates="users")

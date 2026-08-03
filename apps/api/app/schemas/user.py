@@ -8,7 +8,9 @@ class UserCreate(BaseModel):
 
 
 class UserRead(BaseModel):
-    id: int
+    id: str
     email: EmailStr
-    full_name: str
-    role: str
+    username: str
+    first_name: str | None = None
+    last_name: str | None = None
+    roles: list[str] = []
