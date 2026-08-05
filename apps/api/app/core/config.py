@@ -53,6 +53,6 @@ def _split_csv(value: str) -> list[str]:
 API_CORS_ORIGINS = _split_csv(
     os.getenv("API_CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
 )
-API_TRUSTED_HOSTS = _split_csv(os.getenv("API_TRUSTED_HOSTS", "localhost,127.0.0.1,testserver"))
+API_TRUSTED_HOSTS = _split_csv(os.getenv("API_TRUSTED_HOSTS", "*"))
 ENABLE_HTTPS_REDIRECT = os.getenv("ENABLE_HTTPS_REDIRECT", "false").lower() == "true"
 ENABLE_SECURITY_HEADERS = os.getenv("ENABLE_SECURITY_HEADERS", "true").lower() == "true"
