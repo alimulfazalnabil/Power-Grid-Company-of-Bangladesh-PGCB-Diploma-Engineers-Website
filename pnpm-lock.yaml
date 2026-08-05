@@ -137,8 +137,8 @@ importers:
         version: 3.25.76
     devDependencies:
       '@testing-library/jest-dom':
-        specifier: ^6.0.0
-        version: 6.10.0(@testing-library/dom@9.3.4)
+        specifier: ^7.0.0
+        version: 7.0.0(@testing-library/dom@9.3.4)
       '@testing-library/react':
         specifier: ^14.0.0
         version: 14.3.1(@types/react@19.2.18)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -786,10 +786,9 @@ packages:
     resolution: {integrity: sha512-FlS4ZWlp97iiNWig0Muq8p+3rVDjRiYE+YKGbAqXOu9nwJFFOdL00kFpz42M+4huzYi86vAK1sOOfyOG45muIQ==}
     engines: {node: '>=14'}
 
-  '@testing-library/jest-dom@6.10.0':
-    resolution: {integrity: sha512-HQwu0KaB2zyT0iLzBL+8CLyZDL3KlZlZJ+2iyc9uCUnlJVskJU/UlPuVCyIPhtukjPQdT2QNoR5nCP5FqTmmDQ==}
+  '@testing-library/jest-dom@7.0.0':
+    resolution: {integrity: sha512-HKAH9C6mBo5yBG6yRO5i43L2iisencAo5z+o5P/saHUoY+miC5ivXRxHBJcFyB5ypPNxHJdK3BoF/3O4DIptMg==}
     engines: {node: '>=22', npm: '>=6', yarn: '>=1'}
-    deprecated: Incorrect minor release with breaking changes (Node >=22 and required @testing-library/dom peer). Use 6.9.1 for the 6.x line, or upgrade to 7.0.0.
     peerDependencies:
       '@testing-library/dom': '>=10 <11'
 
@@ -2791,7 +2790,7 @@ snapshots:
       lz-string: 1.5.0
       pretty-format: 27.5.1
 
-  '@testing-library/jest-dom@6.10.0(@testing-library/dom@9.3.4)':
+  '@testing-library/jest-dom@7.0.0(@testing-library/dom@9.3.4)':
     dependencies:
       '@adobe/css-tools': 4.5.0
       '@testing-library/dom': 9.3.4
