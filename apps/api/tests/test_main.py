@@ -5,10 +5,11 @@ from app.main import app
 client = TestClient(app)
 
 
-def test_root_endpoint_returns_welcome_message() -> None:
+def test_root_endpoint_returns_service_status() -> None:
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json()["message"] == "PGCB Portal API is running"
+    assert response.json()["status"] == "ok"
+    assert response.json()["service"] == "api"
 
 
 def test_health_endpoint_returns_ok() -> None:

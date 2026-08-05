@@ -18,6 +18,8 @@ JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET", "CHANGE_ME")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "15"))
 REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_ISSUER = os.getenv("JWT_ISSUER", "pgcb-api")
+JWT_AUDIENCE = os.getenv("JWT_AUDIENCE", "pgcb-web")
 NEXT_PUBLIC_API_URL = os.getenv("NEXT_PUBLIC_API_URL", "http://localhost/api")
 OTEL_ENABLED = os.getenv("OTEL_ENABLED", "true").lower() == "true"
 OTEL_SERVICE_NAME = os.getenv("OTEL_SERVICE_NAME", "pgcb-api")
@@ -42,3 +44,15 @@ CACHE_TTL_SETTINGS_SECONDS = int(os.getenv("CACHE_TTL_SETTINGS_SECONDS", "43200"
 CACHE_TTL_CATEGORIES_SECONDS = int(os.getenv("CACHE_TTL_CATEGORIES_SECONDS", "86400"))
 CACHE_TTL_USERS_SECONDS = int(os.getenv("CACHE_TTL_USERS_SECONDS", "1800"))
 CACHE_TTL_SEARCH_SECONDS = int(os.getenv("CACHE_TTL_SEARCH_SECONDS", "600"))
+
+
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+API_CORS_ORIGINS = _split_csv(
+    os.getenv("API_CORS_ORIGINS", "http://localhost:3000,http://localhost:3001")
+)
+API_TRUSTED_HOSTS = _split_csv(os.getenv("API_TRUSTED_HOSTS", "localhost,127.0.0.1,testserver"))
+ENABLE_HTTPS_REDIRECT = os.getenv("ENABLE_HTTPS_REDIRECT", "false").lower() == "true"
+ENABLE_SECURITY_HEADERS = os.getenv("ENABLE_SECURITY_HEADERS", "true").lower() == "true"
