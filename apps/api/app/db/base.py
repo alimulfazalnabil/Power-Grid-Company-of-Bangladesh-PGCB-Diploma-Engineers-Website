@@ -1,5 +1,6 @@
 from app.db.base_class import Base
 from app.models.audit_log import AuditLog
+from app.models.notice_attachment import NoticeAttachment
 from app.models.permission import Permission
 from app.models.notice import Notice
 from app.models.refresh_token import RefreshToken
@@ -18,4 +19,5 @@ __all__ = [
     "AuditLog",
     "Slider",
     "Notice",
+    "NoticeAttachment",
 ]

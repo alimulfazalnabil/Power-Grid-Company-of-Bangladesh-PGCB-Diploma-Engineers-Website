@@ -2,12 +2,19 @@
   "name": "pgcb-portal",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "pnpm@10",
+  "packageManager": "pnpm@10.32.1",
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
     "test": "turbo test",
+    "test:unit": "pytest tests/unit apps/api/tests --cov=apps/api/app --cov-report=xml --cov-report=term-missing --cov-fail-under=90",
+    "test:integration": "pytest tests/integration -m integration",
+    "test:api": "pytest tests/api",
+    "test:security": "pytest tests/security",
+    "test:chaos": "pytest tests/chaos -m chaos",
+    "test:e2e": "playwright test -c tests/e2e/playwright.config.ts",
+    "test:smoke:prod": "playwright test -c tests/e2e/playwright.config.ts tests/e2e/specs/production-smoke.spec.ts",
     "format": "prettier --write .",
     "clean": "turbo clean",
     "dev:web": "pnpm --filter web dev",
@@ -18,6 +25,7 @@
     "db:migrate": "cd apps/api && alembic upgrade head"
   },
   "devDependencies": {
+    "@playwright/test": "^1.55.0",
     "prettier": "^3.6.0",
     "turbo": "^2.5.6",
     "typescript": "^5.9.2"

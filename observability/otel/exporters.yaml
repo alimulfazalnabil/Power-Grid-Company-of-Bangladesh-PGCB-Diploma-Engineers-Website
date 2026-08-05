@@ -1,0 +1,6 @@
+exporters:
+  azuremonitor:
+    connection_string: ${APPLICATIONINSIGHTS_CONNECTION_STRING}
+  prometheusremotewrite:
+    endpoint: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write
+  debug:

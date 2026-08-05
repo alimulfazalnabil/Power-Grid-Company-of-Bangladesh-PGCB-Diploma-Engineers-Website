@@ -1,0 +1,21 @@
+{{- if .Values.monitoring.otelCollector.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: otlp-grpc
+      port: {{ .Values.monitoring.otelCollector.service.portGrpc }}
+      targetPort: otlp-grpc
+    - name: otlp-http
+      port: {{ .Values.monitoring.otelCollector.service.portHttp }}
+      targetPort: otlp-http
+{{- end }}

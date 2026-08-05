@@ -1,0 +1,51 @@
+name: Rollback
+"on":
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: production
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+      image_tag:
+        description: GitOps image tag to roll back to
+        required: true
+        type: string
+permissions:
+  contents: write
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Update environment values file
+        env:
+          TARGET_ENV: ${{ inputs.environment }}
+          TARGET_TAG: ${{ inputs.image_tag }}
+        run: |
+          case "$TARGET_ENV" in
+            dev) VALUES_FILE="kubernetes/enterprise-cms/values-dev.yaml" ;;
+            staging) VALUES_FILE="kubernetes/enterprise-cms/values-staging.yaml" ;;
+            production) VALUES_FILE="kubernetes/enterprise-cms/values-prod.yaml" ;;
+            *) echo "Unsupported environment: $TARGET_ENV"; exit 1 ;;
+          esac
+          perl -0pi -e 's/(image:\n\s+tag:\s*).*/${1}'"${TARGET_TAG}"'/m' "$VALUES_FILE"
+      - name: Commit rollback
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add kubernetes/enterprise-cms/values-*.yaml
+          if git diff --cached --quiet; then
+            echo "No rollback change to commit"
+            exit 0
+          fi
+          git commit -m "chore(gitops): rollback ${{ inputs.environment }} to ${{ inputs.image_tag }}"
+          git push

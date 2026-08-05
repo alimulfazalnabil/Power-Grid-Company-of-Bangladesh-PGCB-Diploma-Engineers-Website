@@ -3,6 +3,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user, require_roles
@@ -14,6 +15,8 @@ from app.schemas.slider import (
     SliderUpdate,
 )
 from app.services.slider_service import SliderService
+from app.core.config import CACHE_TTL_HOMEPAGE_SECONDS
+from app.utils.cache import build_cache_key, get_cached_json, set_cached_json
 
 router = APIRouter(
     prefix="/sliders",
@@ -25,33 +28,50 @@ router = APIRouter(
     "",
     response_model=list[SliderResponse],
 )
-def get_active_sliders(
+async def get_active_sliders(
+    response: Response,
     db: Session = Depends(get_db),
 ):
     """
     Public homepage sliders.
     """
 
+    response.headers["Cache-Control"] = "public, max-age=0, s-maxage=300, stale-while-revalidate=60"
+
+    cache_key = build_cache_key("sliders", "active")
+    cached = await get_cached_json(cache_key)
+    if cached is not None:
+        return cached
+
     service = SliderService(db)
+    sliders = await run_in_threadpool(service.list_active)
+    payload = [SliderResponse.model_validate(item).model_dump(mode="json") for item in sliders]
 
-    sliders = service.list_active()
+    await set_cached_json(cache_key, payload, CACHE_TTL_HOMEPAGE_SECONDS)
 
-    return [SliderResponse.model_validate(item) for item in sliders]
+    return payload
 
 
 @router.get(
     "/{slider_id}",
     response_model=SliderResponse,
 )
-def get_slider(
+async def get_slider(
     slider_id: UUID,
     db: Session = Depends(get_db),
 ):
     service = SliderService(db)
 
-    slider = service.get(slider_id)
+    cache_key = build_cache_key("sliders", "by-id", slider_id)
+    cached = await get_cached_json(cache_key)
+    if cached is not None:
+        return cached
 
-    return SliderResponse.model_validate(slider)
+    slider = await run_in_threadpool(service.get, slider_id)
+    payload = SliderResponse.model_validate(slider).model_dump(mode="json")
+    await set_cached_json(cache_key, payload, CACHE_TTL_HOMEPAGE_SECONDS)
+
+    return payload
 
 
 @router.get(
@@ -62,16 +82,17 @@ def get_slider(
         Depends(require_roles("SUPER_ADMIN", "EDITOR")),
     ],
 )
-def list_sliders(
+async def list_sliders(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
     service = SliderService(db)
 
-    return service.list(
-        page=page,
-        page_size=page_size,
+    return await run_in_threadpool(
+        service.list,
+        page,
+        page_size,
     )
 
 
@@ -84,13 +105,13 @@ def list_sliders(
         Depends(require_roles("SUPER_ADMIN", "EDITOR")),
     ],
 )
-def create_slider(
+async def create_slider(
     payload: SliderCreate,
     db: Session = Depends(get_db),
 ):
     service = SliderService(db)
 
-    slider = service.create(payload)
+    slider = await run_in_threadpool(service.create, payload)
 
     return SliderResponse.model_validate(slider)
 
@@ -103,17 +124,14 @@ def create_slider(
         Depends(require_roles("SUPER_ADMIN", "EDITOR")),
     ],
 )
-def update_slider(
+async def update_slider(
     slider_id: UUID,
     payload: SliderUpdate,
     db: Session = Depends(get_db),
 ):
     service = SliderService(db)
 
-    slider = service.update(
-        slider_id,
-        payload,
-    )
+    slider = await run_in_threadpool(service.update, slider_id, payload)
 
     return SliderResponse.model_validate(slider)
 
@@ -126,12 +144,12 @@ def update_slider(
         Depends(require_roles("SUPER_ADMIN")),
     ],
 )
-def delete_slider(
+async def delete_slider(
     slider_id: UUID,
     db: Session = Depends(get_db),
 ):
     service = SliderService(db)
 
-    service.delete(slider_id)
+    await run_in_threadpool(service.delete, slider_id)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

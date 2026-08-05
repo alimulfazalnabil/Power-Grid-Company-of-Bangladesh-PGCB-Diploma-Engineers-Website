@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: enterprise-cms
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: development
+            valuesFile: values-dev.yaml
+            registry: enterprisecmsdevacr.azurecr.io
+          - env: staging
+            namespace: staging
+            valuesFile: values-staging.yaml
+            registry: enterprisecmsstagingacr.azurecr.io
+          - env: production
+            namespace: production
+            valuesFile: values-prod.yaml
+            registry: enterprisecmsprodacr.azurecr.io
+  template:
+    metadata:
+      name: enterprise-cms-{{env}}
+      annotations:
+        argocd-image-updater.argoproj.io/image-list: release={{registry}}/enterprise-api
+        argocd-image-updater.argoproj.io/release.helm.image-tag: image.tag
+        argocd-image-updater.argoproj.io/write-back-method: git
+        argocd-image-updater.argoproj.io/write-back-target: helmvalues:kubernetes/enterprise-cms/{{valuesFile}}
+        argocd.argoproj.io/sync-wave: "6"
+    spec:
+      project: enterprise-cms
+      source:
+        repoURL: https://github.com/alimulfazalnabil/Power-Grid-Company-of-Bangladesh-PGCB-Diploma-Engineers-Website
+        targetRevision: alimul-fazal-nabil/set-up-the-development-environment-fxHTwH
+        path: kubernetes/enterprise-cms
+        helm:
+          valueFiles:
+            - values.yaml
+            - '{{valuesFile}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{namespace}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true

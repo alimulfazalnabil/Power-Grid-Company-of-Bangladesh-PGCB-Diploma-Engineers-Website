@@ -1,0 +1,221 @@
+global:
+  environment: production
+  imageRegistry: enterprisecmsprodacr.azurecr.io
+  imagePullSecrets: []
+
+security:
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+
+image:
+  tag: latest
+  pullPolicy: IfNotPresent
+
+replicaCount:
+  frontend: 2
+  backend: 2
+  worker: 2
+
+nameOverride: ""
+
+web:
+  enabled: true
+  image:
+    repository: enterprise-web
+  service:
+    port: 3000
+  serviceAccount:
+    name: frontend-sa
+    clientId: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  probes:
+    liveness:
+      path: /
+      initialDelaySeconds: 20
+      periodSeconds: 15
+    readiness:
+      path: /
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    startup:
+      path: /
+      failureThreshold: 30
+      periodSeconds: 5
+
+api:
+  enabled: true
+  image:
+    repository: enterprise-api
+  service:
+    port: 8000
+  serviceAccount:
+    name: backend-sa
+    clientId: ""
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+  probes:
+    liveness:
+      path: /health
+      initialDelaySeconds: 20
+      periodSeconds: 15
+    readiness:
+      path: /ready
+      initialDelaySeconds: 10
+      periodSeconds: 10
+    startup:
+      path: /startup
+      failureThreshold: 30
+      periodSeconds: 5
+
+worker:
+  enabled: false
+  image:
+    repository: enterprise-worker
+  serviceAccount:
+    name: worker-sa
+    clientId: ""
+  command:
+    - celery
+    - -A
+    - app.worker
+    - worker
+    - --loglevel=info
+  terminationGracePeriodSeconds: 60
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: "2"
+      memory: 2Gi
+
+config:
+  APP_ENV: production
+  LOG_LEVEL: info
+  API_BASE_URL: http://enterprise-cms-api:8000
+  NEXT_PUBLIC_API_URL: /api
+  FEATURE_FLAGS: ""
+
+ingress:
+  enabled: true
+  className: nginx
+  host: enterprisecms.example.com
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "2"
+  tls:
+    enabled: true
+    secretName: enterprise-cms-tls
+
+autoscaling:
+  enabled: true
+  frontend:
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 75
+  backend:
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 75
+  worker:
+    minReplicas: 2
+    maxReplicas: 20
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 75
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: true
+  postgresCidrs:
+    - 10.0.2.0/24
+  redisCidrs:
+    - 10.0.3.0/24
+  ingressNamespaceSelector: {}
+
+secretProviderClass:
+  enabled: true
+  name: enterprise-cms-secrets
+  keyVaultName: enterprise-cms-prod-kv
+  tenantId: ""
+  clientId: ""
+  objects:
+    - JWTSecret
+    - SMTPPassword
+    - DatabaseConnection
+    - RedisConnection
+    - AzureBlobKey
+
+monitoring:
+  podMonitor:
+    enabled: false
+    interval: 30s
+    path: /metrics
+  prometheusRule:
+    enabled: true
+  otelCollector:
+    enabled: true
+    image:
+      repository: otel/opentelemetry-collector-contrib
+      tag: 0.109.0
+    service:
+      portGrpc: 4317
+      portHttp: 4318
+    endpoint: http://otel-collector:4317
+    serviceAccountName: otel-collector-sa
+    applicationInsightsObjectName: ApplicationInsightsConnectionString
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+observability:
+  applicationInsights:
+    enabled: true
+  structuredLogging:
+    enabled: true
+
+localDependencies:
+  postgres:
+    enabled: false
+    image: postgres:16-alpine
+    database: enterprise_cms
+    username: postgres
+    password: postgres
+    storage:
+      enabled: false
+      size: 10Gi
+  redis:
+    enabled: false
+    image: redis:7-alpine

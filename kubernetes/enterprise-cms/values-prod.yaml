@@ -1,0 +1,27 @@
+global:
+  environment: production
+  imageRegistry: enterprisecmsprodacr.azurecr.io
+
+image:
+  tag: latest
+
+config:
+  APP_ENV: production
+  LOG_LEVEL: warning
+
+ingress:
+  host: enterprisecms.example.com
+  tls:
+    secretName: enterprise-cms-prod-tls
+
+worker:
+  enabled: true
+
+secretProviderClass:
+  keyVaultName: enterprise-cms-prod-kv
+
+monitoring:
+  podMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true

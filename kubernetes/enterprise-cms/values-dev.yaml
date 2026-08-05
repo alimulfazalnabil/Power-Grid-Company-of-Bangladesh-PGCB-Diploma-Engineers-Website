@@ -1,0 +1,45 @@
+global:
+  environment: development
+  imageRegistry: enterprisecmsdevacr.azurecr.io
+
+image:
+  tag: dev
+
+replicaCount:
+  frontend: 1
+  backend: 1
+  worker: 1
+
+config:
+  APP_ENV: development
+  LOG_LEVEL: debug
+  API_BASE_URL: http://enterprise-cms-api:8000
+  NEXT_PUBLIC_API_URL: /api
+
+ingress:
+  host: dev.enterprisecms.example.com
+  tls:
+    secretName: enterprise-cms-dev-tls
+
+autoscaling:
+  frontend:
+    minReplicas: 1
+    maxReplicas: 3
+  backend:
+    minReplicas: 1
+    maxReplicas: 3
+  worker:
+    minReplicas: 1
+    maxReplicas: 2
+
+worker:
+  enabled: false
+
+secretProviderClass:
+  keyVaultName: enterprise-cms-dev-kv
+
+localDependencies:
+  postgres:
+    enabled: true
+  redis:
+    enabled: true

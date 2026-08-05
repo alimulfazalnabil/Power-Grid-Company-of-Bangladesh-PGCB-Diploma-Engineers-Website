@@ -1,0 +1,12 @@
+title = "Enterprise CMS Gitleaks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Example and placeholder configuration"
+regexes = [
+  '''stored-in-key-vault''',
+  '''xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx''',
+  '''ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0.*placeholderkey'''
+]

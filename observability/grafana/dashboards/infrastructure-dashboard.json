@@ -1,0 +1,19 @@
+{
+  "title": "Enterprise CMS Infrastructure",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "title": "Node CPU",
+      "type": "timeseries"
+    },
+    {
+      "title": "Node Memory",
+      "type": "timeseries"
+    },
+    {
+      "title": "Pod Restarts",
+      "type": "timeseries"
+    }
+  ]
+}

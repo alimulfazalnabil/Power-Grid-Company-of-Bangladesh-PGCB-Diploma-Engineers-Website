@@ -1,0 +1,16 @@
+1. Get the application URL by running these commands:
+{{- if .Values.ingress.enabled }}
+  kubectl get ingress {{ .Release.Name }}
+{{- else }}
+  kubectl get svc {{ .Release.Name }}-web
+{{- end }}
+
+2. Check rollout status:
+  kubectl rollout status deployment/{{ .Release.Name }}-api
+  kubectl rollout status deployment/{{ .Release.Name }}-web
+{{- if .Values.worker.enabled }}
+  kubectl rollout status deployment/{{ .Release.Name }}-worker
+{{- end }}
+
+3. Roll back a failed release:
+  helm rollback {{ .Release.Name }} 1

@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: enterprise-cms-production
+  namespace: argocd
+  annotations:
+    argocd-image-updater.argoproj.io/image-list: release=enterprisecmsprodacr.azurecr.io/enterprise-api
+    argocd-image-updater.argoproj.io/release.helm.image-tag: image.tag
+    argocd-image-updater.argoproj.io/write-back-method: git
+    argocd-image-updater.argoproj.io/write-back-target: helmvalues:kubernetes/enterprise-cms/values-prod.yaml
+spec:
+  project: enterprise-cms
+  source:
+    repoURL: https://github.com/alimulfazalnabil/Power-Grid-Company-of-Bangladesh-PGCB-Diploma-Engineers-Website
+    targetRevision: alimul-fazal-nabil/set-up-the-development-environment-fxHTwH
+    path: kubernetes/enterprise-cms
+    helm:
+      valueFiles:
+        - values.yaml
+        - values-prod.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

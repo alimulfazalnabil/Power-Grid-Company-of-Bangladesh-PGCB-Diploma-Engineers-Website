@@ -1,0 +1,43 @@
+{{- if .Values.localDependencies.postgres.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-postgres
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: enterprise-cms-local-postgres
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: enterprise-cms-local-postgres
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: enterprise-cms-local-postgres
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: postgres
+          image: {{ .Values.localDependencies.postgres.image }}
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.localDependencies.postgres.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.localDependencies.postgres.username | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.localDependencies.postgres.password | quote }}
+{{- end }}

@@ -1,0 +1,19 @@
+{
+  "title": "Enterprise CMS API",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "title": "Requests/sec",
+      "type": "timeseries"
+    },
+    {
+      "title": "p95 latency",
+      "type": "timeseries"
+    },
+    {
+      "title": "Error Rate",
+      "type": "timeseries"
+    }
+  ]
+}

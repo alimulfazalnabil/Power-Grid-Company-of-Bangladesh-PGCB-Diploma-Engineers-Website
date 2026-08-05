@@ -1,0 +1,25 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: verify-signed-images
+spec:
+  validationFailureAction: Enforce
+  background: false
+  webhookTimeoutSeconds: 30
+  rules:
+    - name: verify-cosign-signatures
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      verifyImages:
+        - imageReferences:
+            - "*.azurecr.io/*"
+          mutateDigest: true
+          attestors:
+            - count: 1
+              entries:
+                - keyless:
+                    issuer: https://token.actions.githubusercontent.com
+                    subject: https://github.com/alimulfazalnabil/Power-Grid-Company-of-Bangladesh-PGCB-Diploma-Engineers-Website/.github/workflows/deploy.yml@refs/heads/alimul-fazal-nabil/set-up-the-development-environment-fxHTwH

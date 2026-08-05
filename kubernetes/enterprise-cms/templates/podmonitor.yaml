@@ -1,0 +1,16 @@
+{{- if .Values.monitoring.podMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: enterprise-cms-api
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  podMetricsEndpoints:
+    - path: {{ .Values.monitoring.podMonitor.path }}
+      port: http
+      interval: {{ .Values.monitoring.podMonitor.interval }}
+
+{{- end }}

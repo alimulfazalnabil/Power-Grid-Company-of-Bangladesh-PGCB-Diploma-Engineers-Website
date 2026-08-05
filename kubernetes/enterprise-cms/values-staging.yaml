@@ -1,0 +1,27 @@
+global:
+  environment: staging
+  imageRegistry: enterprisecmsstagingacr.azurecr.io
+
+image:
+  tag: staging
+
+config:
+  APP_ENV: staging
+  LOG_LEVEL: info
+
+ingress:
+  host: staging.enterprisecms.example.com
+  tls:
+    secretName: enterprise-cms-staging-tls
+
+secretProviderClass:
+  keyVaultName: enterprise-cms-staging-kv
+
+worker:
+  enabled: true
+
+monitoring:
+  podMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true

@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: enterprise-cms
+spec:
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/instance
+        operator: In
+        values:
+          - enterprise-cms
+  podMetricsEndpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

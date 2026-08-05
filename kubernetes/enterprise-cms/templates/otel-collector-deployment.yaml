@@ -1,0 +1,61 @@
+{{- if .Values.monitoring.otelCollector.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: otel-collector
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: otel-collector
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: {{ .Values.monitoring.otelCollector.serviceAccountName }}
+      securityContext:
+        {{- toYaml .Values.security.podSecurityContext | nindent 8 }}
+      containers:
+        - name: otel-collector
+          image: {{ printf "%s:%s" .Values.monitoring.otelCollector.image.repository .Values.monitoring.otelCollector.image.tag | quote }}
+          securityContext:
+            {{- toYaml .Values.security.containerSecurityContext | nindent 12 }}
+          args:
+            - --config=/conf/collector.yaml
+          command:
+            - /bin/sh
+            - -c
+            - |
+              export APPLICATIONINSIGHTS_CONNECTION_STRING="$(cat /mnt/secrets-store/{{ .Values.monitoring.otelCollector.applicationInsightsObjectName }} 2>/dev/null || true)"
+              exec /otelcol-contrib --config=/conf/collector.yaml
+          ports:
+            - name: otlp-grpc
+              containerPort: {{ .Values.monitoring.otelCollector.service.portGrpc }}
+            - name: otlp-http
+              containerPort: {{ .Values.monitoring.otelCollector.service.portHttp }}
+          resources:
+            {{- toYaml .Values.monitoring.otelCollector.resources | nindent 12 }}
+          volumeMounts:
+            - name: collector-config
+              mountPath: /conf
+            - name: secrets-store
+              mountPath: /mnt/secrets-store
+              readOnly: true
+      volumes:
+        - name: collector-config
+          configMap:
+            name: {{ .Release.Name }}-otel-collector
+        - name: secrets-store
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ .Values.secretProviderClass.name }}
+{{- end }}

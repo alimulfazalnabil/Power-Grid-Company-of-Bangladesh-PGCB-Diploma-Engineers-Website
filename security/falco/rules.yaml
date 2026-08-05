@@ -1,0 +1,13 @@
+- rule: Terminal shell in container
+  desc: Detect shell execution inside a container
+  condition: container and spawned_process and proc.name in (bash, sh, zsh)
+  output: >-
+    Shell spawned in container (user=%user.name command=%proc.cmdline container=%container.id image=%container.image.repository)
+  priority: WARNING
+
+- rule: Write below binary dir
+  desc: Detect writes to binary directories inside containers
+  condition: container and evt.type in (open,openat,creat) and fd.name startswith /usr/bin and evt.arg.flags contains O_WRONLY
+  output: >-
+    Write under /usr/bin in container (user=%user.name file=%fd.name command=%proc.cmdline container=%container.id)
+  priority: CRITICAL

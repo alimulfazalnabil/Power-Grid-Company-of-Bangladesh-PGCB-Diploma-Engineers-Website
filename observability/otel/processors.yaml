@@ -1,0 +1,10 @@
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 512
+  batch:
+  resource:
+    attributes:
+      - key: deployment.environment
+        value: production
+        action: upsert

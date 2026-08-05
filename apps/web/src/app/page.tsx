@@ -1,5 +1,7 @@
 import { Button } from '@pgcb/ui';
 
+export const revalidate = 300;
+
 const features = [
   {
     title: 'Announcements',

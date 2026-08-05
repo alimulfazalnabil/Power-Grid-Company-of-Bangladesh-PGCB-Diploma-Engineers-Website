@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app.kubernetes.io/name: enterprise-cms
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  APP_ENV: {{ .Values.config.APP_ENV | quote }}
+  LOG_LEVEL: {{ .Values.config.LOG_LEVEL | quote }}
+  API_BASE_URL: {{ .Values.config.API_BASE_URL | quote }}
+  NEXT_PUBLIC_API_URL: {{ .Values.config.NEXT_PUBLIC_API_URL | quote }}
+  FEATURE_FLAGS: {{ .Values.config.FEATURE_FLAGS | quote }}
+  OTEL_ENABLED: {{ .Values.monitoring.otelCollector.enabled | quote }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.monitoring.otelCollector.endpoint | quote }}
+  METRICS_ENABLED: {{ .Values.monitoring.podMonitor.enabled | quote }}

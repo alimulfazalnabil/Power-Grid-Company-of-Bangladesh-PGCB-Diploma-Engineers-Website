@@ -1,0 +1,37 @@
+{{- if .Values.monitoring.otelCollector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-otel-collector
+  labels:
+    app.kubernetes.io/name: otel-collector
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  collector.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+          http:
+    processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 512
+      batch:
+    exporters:
+      azuremonitor:
+        connection_string: ${APPLICATIONINSIGHTS_CONNECTION_STRING}
+      prometheusremotewrite:
+        endpoint: http://prometheus-operated.monitoring.svc.cluster.local:9090/api/v1/write
+      debug:
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [azuremonitor, debug]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [prometheusremotewrite, debug]
+{{- end }}
