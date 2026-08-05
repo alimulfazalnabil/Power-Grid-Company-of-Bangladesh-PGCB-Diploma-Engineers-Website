@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
     summary="Login",
     description="Authenticate a user and return access and refresh tokens.",
 )
-def login(request: LoginRequest, db: Session = Depends(get_db), http_request: Request | None = None):
+def login(request: LoginRequest, http_request: Request, db: Session = Depends(get_db)):
     try:
         return login_user(
             db,
@@ -43,7 +43,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db), http_request: Re
     summary="Refresh Access Token",
     description="Exchange a valid refresh token for a new access token.",
 )
-def refresh(request: RefreshRequest, db: Session = Depends(get_db), http_request: Request | None = None):
+def refresh(request: RefreshRequest, http_request: Request, db: Session = Depends(get_db)):
     try:
         return refresh_access_token(
             db,
@@ -61,7 +61,7 @@ def refresh(request: RefreshRequest, db: Session = Depends(get_db), http_request
     summary="Logout",
     description="Invalidate the provided refresh token and end the session.",
 )
-def logout(request: RefreshRequest, db: Session = Depends(get_db), http_request: Request | None = None):
+def logout(request: RefreshRequest, http_request: Request, db: Session = Depends(get_db)):
     try:
         logout_user(
             db,
