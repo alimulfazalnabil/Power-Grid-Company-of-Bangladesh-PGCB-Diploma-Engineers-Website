@@ -20,6 +20,19 @@ from app.core.config import (
     OTEL_SERVICE_NAME,
 )
 from app.db.session import engine
+from app.utils.request_context import get_request_id
+
+
+class RequestContextFilter(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        record.request_id = get_request_id() or "-"
+        span = trace.get_current_span()
+        context = span.get_span_context() if span else None
+        if context and context.is_valid:
+            record.trace_id = format(context.trace_id, "032x")
+        else:
+            record.trace_id = "-"
+        return True
 
 
 def configure_observability(app: FastAPI) -> None:
@@ -49,5 +62,6 @@ def _configure_tracing(app: FastAPI) -> None:
 def _configure_logging() -> None:
     logging.basicConfig(
         level=logging.INFO,
-        format='{"timestamp":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","message":"%(message)s"}',
+        format='{"timestamp":"%(asctime)s","level":"%(levelname)s","logger":"%(name)s","request_id":"%(request_id)s","trace_id":"%(trace_id)s","message":"%(message)s"}',
     )
+    logging.getLogger().addFilter(RequestContextFilter())

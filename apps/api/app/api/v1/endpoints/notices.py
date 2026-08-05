@@ -2,17 +2,11 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    Response,
-    status,
+from app.auth.dependencies import get_current_user
+from app.core.config import (
+    CACHE_TTL_HOMEPAGE_SECONDS,
+    CACHE_TTL_SEARCH_SECONDS,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.api.dependencies.auth import get_current_user
 from app.db.dependencies import get_db
 from app.models.user import User
 from app.repositories.notice_repository import NoticeRepository
@@ -24,11 +18,17 @@ from app.schemas.notice import (
     NoticeUpdate,
 )
 from app.services.notice_service import NoticeService
-from app.core.config import (
-    CACHE_TTL_HOMEPAGE_SECONDS,
-    CACHE_TTL_SEARCH_SECONDS,
-)
 from app.utils.cache import build_cache_key, get_cached_json, set_cached_json
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Query,
+    Response,
+    status,
+)
+from fastapi.concurrency import run_in_threadpool
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     prefix='/notices',
@@ -37,7 +37,7 @@ router = APIRouter(
 
 
 def get_service(
-    db: AsyncSession = Depends(get_db),
+    db: Session = Depends(get_db),
 ) -> NoticeService:
     repository = NoticeRepository(db)
     return NoticeService(repository)
@@ -48,13 +48,13 @@ def get_service(
     response_model=NoticeListResponse,
 )
 async def list_notices(
+    response: Response,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search: str | None = None,
     category: UUID | None = None,
     status: str | None = None,
     featured: bool | None = None,
-    response: Response,
     service: NoticeService = Depends(get_service),
 ):
     response.headers["Cache-Control"] = "public, max-age=0, s-maxage=600, stale-while-revalidate=60"
@@ -83,7 +83,7 @@ async def list_notices(
         featured=featured,
     )
 
-    result = await service.search(params)
+    result = await run_in_threadpool(service.search, params)
 
     response_payload = NoticeListResponse.model_validate(result).model_dump(mode="json")
     await set_cached_json(cache_key, response_payload, CACHE_TTL_SEARCH_SECONDS)
@@ -96,8 +96,8 @@ async def list_notices(
     response_model=list[NoticeResponse],
 )
 async def latest_notices(
-    limit: int = Query(5, ge=1, le=20),
     response: Response,
+    limit: int = Query(5, ge=1, le=20),
     service: NoticeService = Depends(get_service),
 ):
     response.headers["Cache-Control"] = "public, max-age=0, s-maxage=300, stale-while-revalidate=60"
@@ -107,7 +107,7 @@ async def latest_notices(
     if cached is not None:
         return cached
 
-    notices = await service.latest(limit)
+    notices = await run_in_threadpool(service.latest, limit)
     payload = [NoticeResponse.model_validate(item).model_dump(mode="json") for item in notices]
     await set_cached_json(cache_key, payload, CACHE_TTL_HOMEPAGE_SECONDS)
 
@@ -123,7 +123,7 @@ async def get_notice(
     service: NoticeService = Depends(get_service),
 ):
 
-    notice = await service.get(slug)
+    notice = await run_in_threadpool(service.get, slug)
 
     if not notice:
         raise HTTPException(
@@ -145,10 +145,7 @@ async def create_notice(
     service: NoticeService = Depends(get_service),
 ):
 
-    return await service.create(
-        payload,
-        current_user.id,
-    )
+    return await run_in_threadpool(service.create, payload, current_user.id)
 
 
 @router.put(
@@ -162,10 +159,7 @@ async def update_notice(
     service: NoticeService = Depends(get_service),
 ):
 
-    return await service.update(
-        notice_id,
-        payload,
-    )
+    return await run_in_threadpool(service.update, notice_id, payload)
 
 
 @router.delete(
@@ -178,7 +172,7 @@ async def delete_notice(
     service: NoticeService = Depends(get_service),
 ):
 
-    await service.delete(notice_id)
+    await run_in_threadpool(service.delete, notice_id)
 
     return None
 
@@ -193,7 +187,7 @@ async def publish_notice(
     service: NoticeService = Depends(get_service),
 ):
 
-    return await service.publish(notice_id)
+    return await run_in_threadpool(service.publish, notice_id)
 
 
 @router.post(
@@ -206,4 +200,4 @@ async def archive_notice(
     service: NoticeService = Depends(get_service),
 ):
 
-    return await service.archive(notice_id)
+    return await run_in_threadpool(service.archive, notice_id)

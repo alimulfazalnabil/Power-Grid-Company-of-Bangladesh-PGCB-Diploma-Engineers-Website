@@ -2,15 +2,28 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user, get_db
+from app.auth.profile import build_current_user_response
 from app.auth.service import login_user, logout_user, refresh_access_token
 from app.models.user import User
-from app.schemas.auth import AccessTokenResponse, LoginRequest, RefreshRequest, TokenResponse
+from app.schemas.auth import (
+    AccessTokenResponse,
+    LoginRequest,
+    RefreshRequest,
+    TokenResponse,
+)
+from app.schemas.user import UserRead
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest, db: Session = Depends(get_db), http_request: Request = None):
+@router.post(
+    "/login",
+    response_model=TokenResponse,
+    status_code=200,
+    summary="Login",
+    description="Authenticate a user and return access and refresh tokens.",
+)
+def login(request: LoginRequest, db: Session = Depends(get_db), http_request: Request | None = None):
     try:
         return login_user(
             db,
@@ -20,11 +33,17 @@ def login(request: LoginRequest, db: Session = Depends(get_db), http_request: Re
             user_agent=http_request.headers.get("user-agent") if http_request else None,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        raise HTTPException(status_code=401, detail="Invalid credentials") from exc
 
 
-@router.post("/refresh", response_model=AccessTokenResponse)
-def refresh(request: RefreshRequest, db: Session = Depends(get_db), http_request: Request = None):
+@router.post(
+    "/refresh",
+    response_model=AccessTokenResponse,
+    status_code=200,
+    summary="Refresh Access Token",
+    description="Exchange a valid refresh token for a new access token.",
+)
+def refresh(request: RefreshRequest, db: Session = Depends(get_db), http_request: Request | None = None):
     try:
         return refresh_access_token(
             db,
@@ -33,11 +52,16 @@ def refresh(request: RefreshRequest, db: Session = Depends(get_db), http_request
             user_agent=http_request.headers.get("user-agent") if http_request else None,
         )
     except ValueError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        raise HTTPException(status_code=401, detail="Invalid refresh token") from exc
 
 
-@router.post("/logout")
-def logout(request: RefreshRequest, db: Session = Depends(get_db), http_request: Request = None):
+@router.post(
+    "/logout",
+    status_code=200,
+    summary="Logout",
+    description="Invalidate the provided refresh token and end the session.",
+)
+def logout(request: RefreshRequest, db: Session = Depends(get_db), http_request: Request | None = None):
     try:
         logout_user(
             db,
@@ -47,26 +71,18 @@ def logout(request: RefreshRequest, db: Session = Depends(get_db), http_request:
         )
         return {"detail": "Logged out"}
     except ValueError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
+        raise HTTPException(status_code=401, detail="Invalid refresh token") from exc
 
 
-@router.get("/me")
-def auth_current_user(current_user: User = Depends(get_current_user)) -> dict[str, object]:
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "username": current_user.username,
-        "first_name": current_user.first_name,
-        "last_name": current_user.last_name,
-        "roles": [role.name for role in current_user.roles] if hasattr(current_user, "roles") else [],
-    }
+@router.get(
+    "/me",
+    status_code=200,
+    response_model=UserRead,
+    summary="Current User",
+    description="Return the currently authenticated user profile.",
+    deprecated=True,
+)
+def auth_current_user(current_user: User = Depends(get_current_user)) -> UserRead:
+    return build_current_user_response(current_user)
 
 
-@router.get("/me")
-def get_current_user_info(current_user: User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "email": current_user.email,
-        "username": current_user.username,
-        "roles": [role.name for role in current_user.roles] if hasattr(current_user, "roles") else [],
-    }

@@ -21,13 +21,13 @@ class NoticeService:
     ):
         self.repository = repository
 
-    async def create(
+    def create(
         self,
         payload: NoticeCreate,
         author_id: UUID,
     ) -> Notice:
 
-        slug = await self._generate_unique_slug(
+        slug = self._generate_unique_slug(
             payload.slug or payload.title
         )
 
@@ -46,15 +46,15 @@ class NoticeService:
             expires_at=payload.expires_at,
         )
 
-        return await self.repository.create(notice)
+        return self.repository.create(notice)
 
-    async def update(
+    def update(
         self,
         notice_id: UUID,
         payload: NoticeUpdate,
     ) -> Notice:
 
-        notice = await self.repository.get_by_id(
+        notice = self.repository.get_by_id(
             notice_id
         )
 
@@ -66,7 +66,7 @@ class NoticeService:
         )
 
         if 'slug' in update_data:
-            update_data['slug'] = await self._generate_unique_slug(
+            update_data['slug'] = self._generate_unique_slug(
                 update_data['slug'],
                 exclude_id=notice.id,
             )
@@ -74,14 +74,14 @@ class NoticeService:
         for key, value in update_data.items():
             setattr(notice, key, value)
 
-        return await self.repository.update(notice)
+        return self.repository.update(notice)
 
-    async def publish(
+    def publish(
         self,
         notice_id: UUID,
     ) -> Notice:
 
-        notice = await self.repository.get_by_id(
+        notice = self.repository.get_by_id(
             notice_id
         )
 
@@ -95,14 +95,14 @@ class NoticeService:
                 timezone.utc
             )
 
-        return await self.repository.update(notice)
+        return self.repository.update(notice)
 
-    async def archive(
+    def archive(
         self,
         notice_id: UUID,
     ) -> Notice:
 
-        notice = await self.repository.get_by_id(
+        notice = self.repository.get_by_id(
             notice_id
         )
 
@@ -111,43 +111,43 @@ class NoticeService:
 
         notice.status = NoticeStatus.ARCHIVED
 
-        return await self.repository.update(notice)
+        return self.repository.update(notice)
 
-    async def delete(
+    def delete(
         self,
         notice_id: UUID,
     ):
 
-        notice = await self.repository.get_by_id(
+        notice = self.repository.get_by_id(
             notice_id
         )
 
         if not notice:
             raise ValueError('Notice not found.')
 
-        await self.repository.delete(notice)
+        self.repository.delete(notice)
 
-    async def get(
+    def get(
         self,
         slug: str,
     ) -> Notice | None:
 
-        notice = await self.repository.get_by_slug(
+        notice = self.repository.get_by_slug(
             slug
         )
 
         if notice:
-            await self.repository.increment_views(
+            self.repository.increment_views(
                 notice
             )
 
         return notice
 
-    async def search(
+    def search(
         self,
         params: NoticeSearchParams,
     ):
-        return await self.repository.list(
+        return self.repository.list(
             page=params.page,
             page_size=params.page_size,
             search=params.search,
@@ -156,13 +156,13 @@ class NoticeService:
             featured=params.featured,
         )
 
-    async def latest(
+    def latest(
         self,
         limit: int = 5,
     ):
-        return await self.repository.get_latest(limit)
+        return self.repository.get_latest(limit)
 
-    async def _generate_unique_slug(
+    def _generate_unique_slug(
         self,
         text: str,
         exclude_id: UUID | None = None,
@@ -176,7 +176,7 @@ class NoticeService:
 
         while True:
 
-            existing = await self.repository.get_by_slug(
+            existing = self.repository.get_by_slug(
                 slug
             )
 

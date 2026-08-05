@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from sqlalchemy import func, or_, select
@@ -13,13 +13,13 @@ class NoticeRepository:
     def __init__(self, db: Session):
         self.db = db
 
-    async def create(self, notice: Notice) -> Notice:
+    def create(self, notice: Notice) -> Notice:
         self.db.add(notice)
         self.db.commit()
         self.db.refresh(notice)
         return notice
 
-    async def get_by_id(
+    def get_by_id(
         self,
         notice_id: UUID,
     ) -> Notice | None:
@@ -31,13 +31,13 @@ class NoticeRepository:
             )
             .where(
                 Notice.id == notice_id,
-                Notice.deleted_at.is_(None),
+                Notice.deleted.is_(False),
             )
         )
 
         return self.db.scalar(stmt)
 
-    async def get_by_slug(
+    def get_by_slug(
         self,
         slug: str,
     ) -> Notice | None:
@@ -50,13 +50,13 @@ class NoticeRepository:
             )
             .where(
                 Notice.slug == slug,
-                Notice.deleted_at.is_(None),
+                Notice.deleted.is_(False),
             )
         )
 
         return self.db.scalar(stmt)
 
-    async def update(
+    def update(
         self,
         notice: Notice,
     ) -> Notice:
@@ -66,16 +66,17 @@ class NoticeRepository:
 
         return notice
 
-    async def delete(
+    def delete(
         self,
         notice: Notice,
     ) -> None:
 
-        notice.deleted_at = datetime.utcnow()
+        notice.deleted = True
+        notice.updated_at = datetime.now(timezone.utc)
 
         self.db.commit()
 
-    async def list(
+    def list(
         self,
         *,
         page: int = 1,
@@ -89,7 +90,7 @@ class NoticeRepository:
         query = (
             select(Notice)
             .where(
-                Notice.deleted_at.is_(None)
+                Notice.deleted.is_(False)
             )
         )
 
@@ -136,12 +137,12 @@ class NoticeRepository:
 
         return {
             'items': items,
-            'total': total,
+            'total': total or 0,
             'page': page,
             'page_size': page_size,
         }
 
-    async def get_latest(
+    def get_latest(
         self,
         limit: int = 5,
     ):
@@ -150,7 +151,7 @@ class NoticeRepository:
             select(Notice)
             .where(
                 Notice.status == NoticeStatus.PUBLISHED,
-                Notice.deleted_at.is_(None),
+                Notice.deleted.is_(False),
             )
             .order_by(
                 Notice.published_at.desc()
@@ -160,7 +161,7 @@ class NoticeRepository:
 
         return self.db.scalars(stmt).all()
 
-    async def increment_views(
+    def increment_views(
         self,
         notice: Notice,
     ):
