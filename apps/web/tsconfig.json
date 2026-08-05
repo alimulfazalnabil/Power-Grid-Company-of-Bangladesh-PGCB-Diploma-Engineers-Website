@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["dom", "dom.iterable", "es2022"],
+    "baseUrl": ".",
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -15,7 +16,7 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

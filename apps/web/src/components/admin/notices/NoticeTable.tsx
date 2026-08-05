@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import {
   Eye,
   Pencil,
@@ -39,7 +40,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-import type { NoticeSummary } from "@/services/notice.service";
+import type { NoticeListResponse, NoticeSummary } from "@/services/notice.service";
 
 const columns: ColumnDef<NoticeSummary>[] = [
   {
@@ -105,7 +106,7 @@ const columns: ColumnDef<NoticeSummary>[] = [
           <DropdownMenuItem asChild>
 
             <Link
-              href={`/notices/${row.original.slug}`}
+              href={`/notices/${row.original.slug}` as Route}
             >
               <Eye className="mr-2 h-4 w-4"/>
               View
@@ -116,7 +117,7 @@ const columns: ColumnDef<NoticeSummary>[] = [
           <DropdownMenuItem asChild>
 
             <Link
-              href={`/dashboard/notices/${row.original.id}`}
+              href={`/dashboard/notices/${row.original.id}` as Route}
             >
               <Pencil className="mr-2 h-4 w-4"/>
               Edit
@@ -172,7 +173,10 @@ export function NoticeTable() {
   } = useNotices({
     page: 1,
     page_size: 20,
-  });
+  }) as {
+    data?: NoticeListResponse;
+    isLoading: boolean;
+  };
 
   const table = useReactTable({
     data: data?.items ?? [],

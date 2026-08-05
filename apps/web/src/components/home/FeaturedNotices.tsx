@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import type { Route } from "next";
 import { Pin, ArrowRight, Calendar } from "lucide-react";
 import { format } from "date-fns";
 
@@ -62,7 +63,7 @@ export function FeaturedNotices() {
 
           <Button asChild>
 
-            <Link href="/notices">
+            <Link href={"/notices" as Route}>
 
               All Notices
 
@@ -79,7 +80,7 @@ export function FeaturedNotices() {
           {/* Hero Card */}
 
           <Link
-            href={`/notices/${hero.slug}`}
+            href={`/notices/${hero.slug}` as Route}
             className="group lg:col-span-2"
           >
 
@@ -142,7 +143,7 @@ export function FeaturedNotices() {
 
               <Link
                 key={notice.id}
-                href={`/notices/${notice.slug}`}
+                href={`/notices/${notice.slug}` as Route}
               >
 
                 <article className="flex gap-4 rounded-2xl border bg-background p-4 transition hover:shadow-lg">

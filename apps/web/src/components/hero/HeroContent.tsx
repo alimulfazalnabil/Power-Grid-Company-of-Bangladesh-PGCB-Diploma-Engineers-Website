@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import type { Route } from 'next';
 import type { Slider } from '../../types/slider';
 
 interface HeroContentProps {
@@ -28,7 +29,7 @@ export function HeroContent({ slide }: HeroContentProps) {
         {slide.description}
       </p>
       <Link
-        href={slide.button_url}
+        href={slide.button_url as Route}
         className="mt-6 inline-flex items-center gap-2 rounded-full bg-secondary px-5 py-3 text-sm font-semibold text-white transition hover:bg-secondary/90"
       >
         {slide.button_text}

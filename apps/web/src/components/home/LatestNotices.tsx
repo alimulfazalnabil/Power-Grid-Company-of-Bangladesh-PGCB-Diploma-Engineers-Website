@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { ArrowRight } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export function LatestNotices() {
 
           <Button asChild>
 
-            <Link href="/notices">
+            <Link href={"/notices" as Route}>
 
               View All
 

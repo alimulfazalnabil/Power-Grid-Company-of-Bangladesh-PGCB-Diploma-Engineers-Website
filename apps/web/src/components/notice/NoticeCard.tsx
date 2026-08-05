@@ -11,6 +11,7 @@ import {
 
 import { format } from "date-fns";
 
+import type { Route } from "next";
 import type { NoticeSummary } from "@/services/notice.service";
 
 interface NoticeCardProps {
@@ -143,7 +144,7 @@ export function NoticeCard({
         </p>
 
         <Link
-          href={`/notices/${notice.slug}`}
+          href={`/notices/${notice.slug}` as Route}
           className="
             inline-flex
             items-center

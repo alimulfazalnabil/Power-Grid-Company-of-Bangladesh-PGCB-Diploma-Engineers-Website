@@ -9,6 +9,7 @@ import { NoticeSearch } from "./NoticeSearch";
 import { NoticeCategoryFilter } from "./NoticeCategoryFilter";
 
 import { useNotices } from "@/hooks/useNotices";
+import type { NoticeListResponse } from "@/services/notice.service";
 
 interface NoticeSectionProps {
   title?: string;
@@ -44,7 +45,11 @@ export function NoticeSection({
     featured: featuredOnly,
     search,
     category: category || undefined,
-  });
+  }) as {
+    data?: NoticeListResponse;
+    isLoading: boolean;
+    error: Error | null;
+  };
 
   return (
     <section className="py-16">

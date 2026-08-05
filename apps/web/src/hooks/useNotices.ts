@@ -9,6 +9,9 @@ import {
 import {
   noticeService,
   NoticeSearchParams,
+  NoticeDetail,
+  NoticeListResponse,
+  NoticeSummary,
 } from '@/services/notice.service';
 
 export const noticeKeys = {
@@ -31,8 +34,8 @@ export const noticeKeys = {
 
 export function useNotices(
   params: NoticeSearchParams = {}
-) {
-  return useQuery({
+ ) {
+  return useQuery<NoticeListResponse, Error>({
     queryKey: noticeKeys.list(params),
 
     queryFn: () =>
@@ -41,15 +44,13 @@ export function useNotices(
     staleTime: 1000 * 60 * 5,
 
     gcTime: 1000 * 60 * 30,
-
-    keepPreviousData: true,
   });
 }
 
 export function useLatestNotices(
   limit = 5
-) {
-  return useQuery({
+ ) {
+  return useQuery<NoticeSummary[], Error>({
     queryKey: [
       ...noticeKeys.latest(),
       limit,
@@ -64,8 +65,8 @@ export function useLatestNotices(
 
 export function useFeaturedNotices(
   limit = 5
-) {
-  return useQuery({
+ ) {
+  return useQuery<NoticeSummary[], Error>({
     queryKey: [
       ...noticeKeys.featured(),
       limit,
@@ -80,8 +81,8 @@ export function useFeaturedNotices(
 
 export function useNotice(
   slug: string
-) {
-  return useQuery({
+ ) {
+  return useQuery<NoticeDetail, Error>({
     queryKey: noticeKeys.detail(slug),
 
     queryFn: () =>
