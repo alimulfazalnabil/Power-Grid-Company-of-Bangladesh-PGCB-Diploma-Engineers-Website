@@ -23,6 +23,6 @@ opentelemetry-exporter-otlp==1.28.2
 opentelemetry-instrumentation-fastapi==0.65b0
 opentelemetry-instrumentation-sqlalchemy==0.49b2
 opentelemetry-instrumentation-redis==0.65b0
-opentelemetry-instrumentation-httpx==0.49b2
+opentelemetry-instrumentation-httpx==0.65b0
 opentelemetry-instrumentation-logging==0.65b0
 prometheus-fastapi-instrumentator==7.0.0
