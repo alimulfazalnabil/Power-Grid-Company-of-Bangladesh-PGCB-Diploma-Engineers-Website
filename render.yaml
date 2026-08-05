@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: pgcb-api
+    runtime: python
+    plan: free
+    rootDir: apps/api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
+      - key: ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: REDIS_CACHE_ENABLED
+        value: "false"
+      - key: OTEL_ENABLED
+        value: "false"
+
+  - type: web
+    name: pgcb-web
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @pgcb/ui build && pnpm --filter web build
+    startCommand: pnpm --filter web exec next start --hostname 0.0.0.0 --port $PORT
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: NEXT_PUBLIC_API_URL
+        value: https://power-grid-company-of-bangladesh-pgcb.onrender.com
