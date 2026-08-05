@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from uuid import uuid4
 
 from fastapi import FastAPI
@@ -69,7 +70,11 @@ class CacheHeadersMiddleware(BaseHTTPMiddleware):
 def configure_performance_middleware(app: FastAPI) -> None:
     app.add_middleware(RequestIDMiddleware)
 
-    if API_TRUSTED_HOSTS:
+    is_render_runtime = bool(os.getenv("RENDER")) or bool(os.getenv("RENDER_EXTERNAL_URL"))
+
+    # Render health checks can use internal host headers that won't match strict allowlists.
+    # Skip TrustedHostMiddleware on Render to avoid false 400s during startup probes.
+    if API_TRUSTED_HOSTS and not is_render_runtime:
         app.add_middleware(TrustedHostMiddleware, allowed_hosts=API_TRUSTED_HOSTS)
 
     if ENABLE_HTTPS_REDIRECT:
